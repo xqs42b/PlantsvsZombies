@@ -1,3 +1,5 @@
+import time
+
 import pygame
 
 
@@ -16,13 +18,23 @@ def main():
     bg_rect = background.get_rect()
     clock = pygame.time.Clock()
 
-    # 加载僵尸图片
-    zombie_img = pygame.image.load("./resource/images/zombies/idle/idle_00.png").convert_alpha()
-    zombie = pygame.sprite.Sprite()
-    zombie.image = zombie_img
-    zombie.rect = zombie_img.get_rect(center=(WIDTH, HEIGHT/2))
-    # 僵尸的移动速度
-    zombie_speed = 1
+    # 加载僵尸移动图片
+    walk_frame = []
+    for i in range(31):
+        if i < 10:
+            i = f"0{i}"
+        zombie_frame = pygame.image.load(f"./resource/images/zombies/idle/idle_{i}.png").convert_alpha()
+        walk_frame.append(zombie_frame)
+
+    # 僵尸角色位置，速度
+    zombie_speed = 3
+    zombie_x = WIDTH / 2
+    zombie_y = HEIGHT / 5
+
+    # 动画参数设置
+    WALK_FRAME_RATE = 31    # 每一秒播放15帧
+    current_frame = 0
+    last_frame_update = pygame.time.get_ticks()
 
     running = True
     while running:
@@ -30,17 +42,23 @@ def main():
             if event.type == pygame.QUIT:
                 running = False
         # fill the screen with a color to wipe away anything from last frame
-        # screen.blit(sub_surface, ((WIDTH-900)//2, (HEIGHT-600)//2))
         screen.blit(background, bg_rect)
 
-        # 绘制僵尸
-        screen.blit(zombie.image, zombie.rect)
+        # 更新动画
+        current_time = pygame.time.get_ticks()
+        print("-----", current_time)
+        time_since_last_update = current_time - last_frame_update
+        if time_since_last_update >= 1000 // WALK_FRAME_RATE:    # 判断是否到达切换帧的时间
+            current_frame = (current_time + 1) % len(walk_frame)
+            last_frame_update = current_frame
+            pygame.time.wait(148)
 
-        # RENDER YOUR GAME HERE
-        zombie.rect.x -= zombie_speed
+        zombie_x -= zombie_speed
 
-        if zombie.rect.right <= 0:
-            zombie.rect.right = WIDTH
+        screen.blit(walk_frame[current_frame], (zombie_x, zombie_y))
+
+        if zombie_x <= 0:
+            zombie_x = WIDTH
 
         # 更新屏幕
         pygame.display.flip()
